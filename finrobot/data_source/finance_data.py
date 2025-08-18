@@ -10,7 +10,7 @@ SAVE_DIR = "output/SEC_EDGAR_FILINGS_MD"
 def get_data(
         ticker:str,
         year:str,
-        filing_types:List[str] = ["10-K", "10-Q"],
+        filing_types: Optional[List[str]] = None,
         data_source:str = 'unstructured',
         include_amends=True,
         batch_processing:bool=False,
@@ -20,7 +20,11 @@ def get_data(
         vram_per_task:Optional[int] = None,
         num_chunks:int = 1,
 ):
-    assert data_source in ['unstructured','earnings_calls','marker_pdf'], "The valid data sources are ['unstructured','earnings_calls','marker_pdf']"
+    if filing_types is None:
+        filing_types = ["10-K", "10-Q"]
+
+    if data_source not in ['unstructured','earnings_calls','marker_pdf']:
+        raise ValueError("The valid data sources are ['unstructured','earnings_calls','marker_pdf']")
     
     if 'marker_pdf' in data_source:
         # subprocess.run(["ls", "-l"])
@@ -32,7 +36,8 @@ def get_data(
             ticker, year, filing_types, include_amends
         )
         if not batch_processing:
-            assert batch_multiplier is not None, "The batch multiplier is not specified"
+            if batch_multiplier is None:
+                raise ValueError("The batch multiplier is not specified")
             run_marker_single(
             input_ticker_year_path=input_ticker_year_path,
             output_ticker_year_path=output_ticker_year_path,
