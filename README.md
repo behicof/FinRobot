@@ -5,7 +5,7 @@
 # FinRobot: An Open-Source AI Agent Platform for Financial Analysis using Large Language Models
 [![Downloads](https://static.pepy.tech/badge/finrobot)]([https://pepy.tech/project/finrobot](https://pepy.tech/project/finrobot))
 [![Downloads](https://static.pepy.tech/badge/finrobot/week)](https://pepy.tech/project/finrobot)
-[![Python 3.8](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-360/)
+[![Python 3.10](https://img.shields.io/badge/python-3.10-blue.svg)](https://www.python.org/downloads/release/python-3100/)
 [![PyPI](https://img.shields.io/pypi/v/finrobot.svg)](https://pypi.org/project/finrobot/)
 ![License](https://img.shields.io/github/license/AI4Finance-Foundation/finrobot.svg?color=brightgreen)
 ![](https://img.shields.io/github/issues-raw/AI4Finance-Foundation/finrobot?label=Issues)
@@ -183,13 +183,13 @@ register_keys_from_json("../config_api_keys")
 ```python
 company = "NVDA"
 
-assitant = SingleAssistant(
+assistant = SingleAssistant(
     "Market_Analyst",
     llm_config,
-    # set to "ALWAYS" if you want to chat instead of simply receiving the prediciton
+    # set to "ALWAYS" if you want to chat instead of simply receiving the prediction
     human_input_mode="NEVER",
 )
-assitant.chat(
+assistant.chat(
     f"Use all the tools provided to retrieve information available for {company} upon {get_current_date()}. Analyze the positive developments and potential concerns of {company} "
     "with 2-4 most important factors respectively and keep them concise. Most factors should be inferred from company related news. "
     f"Then make a rough prediction (e.g. up/down by 2-3%) of the {company} stock price movement for next week. Provide a summary analysis to support your prediction."
