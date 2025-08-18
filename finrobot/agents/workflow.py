@@ -25,7 +25,7 @@ class FinRobot(AssistantAgent):
         self,
         agent_config: str | Dict[str, Any],
         system_message: str | None = None,  # overwrites previous config
-        toolkits: List[Callable | dict | type] = [],  # overwrites previous config
+        toolkits: Optional[List[Callable | dict | type]] = None,  # overwrites previous config
         proxy: UserProxyAgent | None = None,
         **kwargs,
     ):
@@ -46,6 +46,7 @@ class FinRobot(AssistantAgent):
         default_toolkits = agent_config.get("toolkits", [])
 
         system_message = system_message or default_system_message
+        toolkits = [] if toolkits is None else toolkits
         self.toolkits = toolkits or default_toolkits
 
         name = name.replace(" ", "_").strip()
@@ -105,8 +106,9 @@ class SingleAssistantBase(ABC):
     def __init__(
         self,
         agent_config: str | Dict[str, Any],
-        llm_config: Dict[str, Any] = {},
+        llm_config: Optional[Dict[str, Any]] = None,
     ):
+        llm_config = llm_config or {}
         self.assistant = FinRobot(
             agent_config=agent_config,
             llm_config=llm_config,
@@ -127,17 +129,20 @@ class SingleAssistant(SingleAssistantBase):
     def __init__(
         self,
         agent_config: str | Dict[str, Any],
-        llm_config: Dict[str, Any] = {},
+        llm_config: Optional[Dict[str, Any]] = None,
         is_termination_msg=lambda x: x.get("content", "")
         and x.get("content", "").endswith("TERMINATE"),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
-        code_execution_config={
-            "work_dir": "coding",
-            "use_docker": False,
-        },
+        code_execution_config: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
+        llm_config = llm_config or {}
+        if code_execution_config is None:
+            code_execution_config = {
+                "work_dir": "coding",
+                "use_docker": False,
+            }
         super().__init__(agent_config, llm_config=llm_config)
         self.user_proxy = UserProxyAgent(
             name="User_Proxy",
@@ -171,19 +176,23 @@ class SingleAssistantRAG(SingleAssistant):
     def __init__(
         self,
         agent_config: str | Dict[str, Any],
-        llm_config: Dict[str, Any] = {},
+        llm_config: Optional[Dict[str, Any]] = None,
         is_termination_msg=lambda x: x.get("content", "")
         and x.get("content", "").endswith("TERMINATE"),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
-        code_execution_config={
-            "work_dir": "coding",
-            "use_docker": False,
-        },
-        retrieve_config={},
+        code_execution_config: Optional[Dict[str, Any]] = None,
+        retrieve_config: Optional[Dict[str, Any]] = None,
         rag_description="",
         **kwargs,
     ):
+        llm_config = llm_config or {}
+        if code_execution_config is None:
+            code_execution_config = {
+                "work_dir": "coding",
+                "use_docker": False,
+            }
+        retrieve_config = retrieve_config or {}
         super().__init__(
             agent_config,
             llm_config=llm_config,
@@ -213,17 +222,20 @@ class SingleAssistantShadow(SingleAssistant):
     def __init__(
         self,
         agent_config: str | Dict[str, Any],
-        llm_config: Dict[str, Any] = {},
+        llm_config: Optional[Dict[str, Any]] = None,
         is_termination_msg=lambda x: x.get("content", "")
         and x.get("content", "").endswith("TERMINATE"),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
-        code_execution_config={
-            "work_dir": "coding",
-            "use_docker": False,
-        },
+        code_execution_config: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
+        llm_config = llm_config or {}
+        if code_execution_config is None:
+            code_execution_config = {
+                "work_dir": "coding",
+                "use_docker": False,
+            }
         super().__init__(
             agent_config,
             llm_config=llm_config,
@@ -271,24 +283,27 @@ class MultiAssistantBase(ABC):
     def __init__(
         self,
         group_config: str | dict,
-        agent_configs: List[
+        agent_configs: Optional[List[
             Dict[str, Any] | str | ConversableAgent
-        ] = [],  # overwrites previous config
-        llm_config: Dict[str, Any] = {},
+        ]] = None,  # overwrites previous config
+        llm_config: Optional[Dict[str, Any]] = None,
         user_proxy: UserProxyAgent | None = None,
         is_termination_msg=lambda x: x.get("content", "")
         and x.get("content", "").endswith("TERMINATE"),
         human_input_mode="NEVER",
         max_consecutive_auto_reply=10,
-        code_execution_config={
-            "work_dir": "coding",
-            "use_docker": False,
-        },
+        code_execution_config: Optional[Dict[str, Any]] = None,
         **kwargs,
     ):
         self.group_config = group_config
+        llm_config = llm_config or {}
         self.llm_config = llm_config
         if user_proxy is None:
+            if code_execution_config is None:
+                code_execution_config = {
+                    "work_dir": "coding",
+                    "use_docker": False,
+                }
             self.user_proxy = UserProxyAgent(
                 name="User_Proxy",
                 is_termination_msg=is_termination_msg,
@@ -299,6 +314,7 @@ class MultiAssistantBase(ABC):
             )
         else:
             self.user_proxy = user_proxy
+        agent_configs = agent_configs or []
         self.agent_configs = agent_configs or group_config.get("agents", [])
         assert self.agent_configs, f"agent_configs is required."
         self.agents = []
