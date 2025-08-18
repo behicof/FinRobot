@@ -1,5 +1,5 @@
 from .agent_library import library
-from typing import Any, Callable, Dict, List, Optional, Annotated
+from typing import Any, Callable, Dict, List
 import autogen
 from autogen.cache import Cache
 from autogen import (
@@ -15,7 +15,12 @@ from functools import partial
 from abc import ABC, abstractmethod
 from ..toolkits import register_toolkits
 from ..functional.rag import get_rag_function
-from .utils import *
+from .utils import (
+    instruction_trigger,
+    instruction_message,
+    order_trigger,
+    order_message,
+)
 from .prompts import leader_system_message, role_system_message
 
 
@@ -25,7 +30,7 @@ class FinRobot(AssistantAgent):
         self,
         agent_config: str | Dict[str, Any],
         system_message: str | None = None,  # overwrites previous config
-        toolkits: List[Callable | dict | type] = [],  # overwrites previous config
+        toolkits: List[Callable | dict | type] | None = None,  # overwrites previous config
         proxy: UserProxyAgent | None = None,
         **kwargs,
     ):
@@ -33,19 +38,23 @@ class FinRobot(AssistantAgent):
         if isinstance(agent_config, str):
             orig_name = agent_config
             name = orig_name.replace("_Shadow", "")
-            assert name in library, f"FinRobot {name} not found in agent library."
+            if name not in library:
+                raise ValueError(f"FinRobot {name} not found in agent library.")
             agent_config = library[name]
 
         agent_config = self._preprocess_config(agent_config)
 
-        assert agent_config, f"agent_config is required."
-        assert agent_config.get("name", ""), f"name needs to be in config."
+        if not agent_config:
+            raise ValueError("agent_config is required.")
+        if not agent_config.get("name", ""):
+            raise ValueError("name needs to be in config.")
 
         name = orig_name if orig_name else agent_config["name"]
         default_system_message = agent_config.get("profile", None)
         default_toolkits = agent_config.get("toolkits", [])
 
         system_message = system_message or default_system_message
+        toolkits = [] if toolkits is None else toolkits
         self.toolkits = toolkits or default_toolkits
 
         name = name.replace(" ", "_").strip()
