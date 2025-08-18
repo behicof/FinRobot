@@ -7,7 +7,6 @@ from backtrader.strategies import SMA_CrossOver
 from typing import Annotated, List, Tuple
 from matplotlib import pyplot as plt
 from pprint import pformat
-from IPython import get_ipython
 
 
 class DeployedCapitalAnalyzer(bt.Analyzer):
@@ -86,9 +85,10 @@ class BackTraderUtils:
         if strategy == "SMA_CrossOver":
             strategy_class = SMA_CrossOver
         else:
-            assert (
-                ":" in strategy
-            ), "Custom strategy should be module path and class name separated by a colon."
+            if ":" not in strategy:
+                raise ValueError(
+                    "Custom strategy should be provided as 'module_path:ClassName'."
+                )
             module_path, class_name = strategy.split(":")
             module = importlib.import_module(module_path)
             strategy_class = getattr(module, class_name)
@@ -109,9 +109,10 @@ class BackTraderUtils:
             if isinstance(sizer, int):
                 cerebro.addsizer(bt.sizers.FixedSize, stake=sizer)
             else:
-                assert (
-                    ":" in sizer
-                ), "Custom sizer should be module path and class name separated by a colon."
+                if ":" not in sizer:
+                    raise ValueError(
+                        "Custom sizer should be provided as 'module_path:ClassName'."
+                    )
                 module_path, class_name = sizer.split(":")
                 module = importlib.import_module(module_path)
                 sizer_class = getattr(module, class_name)
@@ -120,9 +121,10 @@ class BackTraderUtils:
 
         # Set additional indicator
         if indicator is not None:
-            assert (
-                ":" in indicator
-            ), "Custom indicator should be module path and class name separated by a colon."
+            if ":" not in indicator:
+                raise ValueError(
+                    "Custom indicator should be provided as 'module_path:ClassName'."
+                )
             module_path, class_name = indicator.split(":")
             module = importlib.import_module(module_path)
             indicator_class = getattr(module, class_name)
